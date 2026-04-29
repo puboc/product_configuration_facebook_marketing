@@ -80,11 +80,11 @@ write_fb_env() {
   log_info "Facebook env directory ready dir=${fb_env_dir} exists=$([[ -d "${fb_env_dir}" ]] && printf true || printf false)"
 
   cat > "${FB_ENV_PATH}" <<EOF
-FB_APP_ID=${FB_APP_ID}
-FB_APP_SECRET=${FB_APP_SECRET}
-FB_SHORT_LIVE_TOKEN=${FB_SHORT_LIVE_TOKEN}
-FB_PAGE_ID=${FB_PAGE_ID}
-FB_AD_ACCOUNT_ID=${FB_AD_ACCOUNT_ID}
+APP_ID=${FB_APP_ID}
+APP_SECRET=${FB_APP_SECRET}
+TOKEN=${FB_SHORT_LIVE_TOKEN}
+PAGE_ID=${FB_PAGE_ID}
+AD_ACCOUNT_ID=${FB_AD_ACCOUNT_ID}
 EOF
   log_info "Facebook env file write command completed path=${FB_ENV_PATH}"
 
@@ -92,7 +92,7 @@ EOF
   log_info "Facebook env file chmod completed path=${FB_ENV_PATH} mode=$(stat -c '%a' "${FB_ENV_PATH}" 2>/dev/null || stat -f '%Lp' "${FB_ENV_PATH}") bytes=$(wc -c < "${FB_ENV_PATH}")"
 
   log_info "Facebook env vars written app_id_sha256=$(fingerprint_value "${FB_APP_ID}") page_id=${FB_PAGE_ID} ad_account_id=${FB_AD_ACCOUNT_ID}"
-  log_info "Facebook env written path=${FB_ENV_PATH} has_app_id=$(grep -q '^FB_APP_ID=' "${FB_ENV_PATH}" && printf true || printf false) has_app_secret=$(grep -q '^FB_APP_SECRET=' "${FB_ENV_PATH}" && printf true || printf false) has_short_live_token=$(grep -q '^FB_SHORT_LIVE_TOKEN=' "${FB_ENV_PATH}" && printf true || printf false)"
+  log_info "Facebook env written path=${FB_ENV_PATH} has_app_id=$(grep -q '^APP_ID=' "${FB_ENV_PATH}" && printf true || printf false) has_app_secret=$(grep -q '^APP_SECRET=' "${FB_ENV_PATH}" && printf true || printf false) has_token=$(grep -q '^TOKEN=' "${FB_ENV_PATH}" && printf true || printf false)"
   log_info "LABEL write_fb_env:done"
 }
 
