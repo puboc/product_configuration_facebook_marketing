@@ -59,6 +59,63 @@ fi
 # shellcheck disable=SC1091
 source "${FEATURE_COMMON_DIR}/lib/api.sh"
 
+OPENCLAW_BASE_DIR="${OPENCLAW_BASE_DIR:-/opt/openclaw}"
+OPENCLAW_WORKSPACE_DIR="${OPENCLAW_WORKSPACE_DIR:-${OPENCLAW_BASE_DIR}/data/.openclaw/workspace}"
+FB_ENV_PATH="${FB_ENV_PATH:-${OPENCLAW_WORKSPACE_DIR}/fb_env}"
+
+fingerprint_value() {
+  python3 -c 'import hashlib,sys; print(hashlib.sha256(sys.stdin.buffer.read().rstrip(b"\n")).hexdigest()[:12])' <<< "$1"
+}
+
+write_fb_env() {
+  local fb_env_dir
+  fb_env_dir="$(dirname -- "${FB_ENV_PATH}")"
+
+  log_info "LABEL write_fb_env:start"
+  log_info "Facebook env write starting path=${FB_ENV_PATH} dir=${fb_env_dir}"
+
+  install -d "${fb_env_dir}"
+  log_info "Facebook env directory ready dir=${fb_env_dir} exists=$([[ -d "${fb_env_dir}" ]] && printf true || printf false)"
+
+  cat > "${FB_ENV_PATH}" <<EOF
+FB_APP_ID=${FB_APP_ID}
+FB_APP_SECRET=${FB_APP_SECRET}
+FB_SHORT_LIVE_TOKEN=${FB_SHORT_LIVE_TOKEN}
+FB_PAGE_ID=${FB_PAGE_ID}
+FB_AD_ACCOUNT_ID=${FB_AD_ACCOUNT_ID}
+EOF
+  log_info "Facebook env file write command completed path=${FB_ENV_PATH}"
+
+  chmod 0600 "${FB_ENV_PATH}"
+  log_info "Facebook env file chmod completed path=${FB_ENV_PATH} mode=$(stat -c '%a' "${FB_ENV_PATH}" 2>/dev/null || stat -f '%Lp' "${FB_ENV_PATH}") bytes=$(wc -c < "${FB_ENV_PATH}")"
+
+  log_info "Facebook env vars written app_id_sha256=$(fingerprint_value "${FB_APP_ID}") page_id=${FB_PAGE_ID} ad_account_id=${FB_AD_ACCOUNT_ID}"
+  log_info "Facebook env written path=${FB_ENV_PATH} has_app_id=$(grep -q '^FB_APP_ID=' "${FB_ENV_PATH}" && printf true || printf false) has_app_secret=$(grep -q '^FB_APP_SECRET=' "${FB_ENV_PATH}" && printf true || printf false) has_short_live_token=$(grep -q '^FB_SHORT_LIVE_TOKEN=' "${FB_ENV_PATH}" && printf true || printf false)"
+  log_info "LABEL write_fb_env:done"
+}
+
 fc::init_runtime_context
 fc::register_agents_template "${AGENTS_TEMPLATE}"
-fc::run_default_setup
+
+fc::prepare_host
+fc::write_runtime_env
+fc::run_step "write-fb-env" write_fb_env
+fc::install_state_patch
+fc::run_openclaw_container
+fc::find_openclaw_config
+fc::configure_telegram_channel
+fc::ensure_openclaw_config_permissions "initial"
+fc::ensure_state_patch_ready "initial"
+fc::post_openclaw_state 1
+fc::run_runtime_defaults_pass "pass1"
+fc::install_workspace_guide
+fc::restart_openclaw "after-workspace-guide"
+fc::sleep_step "sleep-after-openclaw-restart" 10
+fc::ensure_state_patch_ready "second"
+fc::run_runtime_defaults_pass "pass2"
+fc::install_control_plane
+fc::run_runtime_defaults_pass "pass3"
+fc::ensure_support_patch
+fc::post_openclaw_state 2
+fc::write_provision_success
+log_info "Setup completed successfully"
