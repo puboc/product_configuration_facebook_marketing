@@ -1,0 +1,29 @@
+#cloud-config
+package_update: true
+package_upgrade: true
+
+runcmd:
+  - bash -lc 'set -euo pipefail; export DEBIAN_FRONTEND=noninteractive; apt-get update -y; apt-get install -y git python3 python3-pip ca-certificates curl ufw docker.io skopeo'
+  - |
+    bash -lc '
+    set -euo pipefail
+    REPO_URL="https://github.com/puboc/product_configuration_facebook_marketing.git"
+    REPO_REF="${TEMPLATE_REPO_REF:-main}"
+    REPO_TOKEN="githubToken"
+    REPO_DIR="/opt/openclaw-template"
+
+    if [[ -z "${REPO_TOKEN}" || ${#REPO_TOKEN} -lt 20 ]]; then
+      echo "Missing or invalid repository token in template rendering." >&2
+      exit 1
+    fi
+
+    rm -rf "${REPO_DIR}"
+    git clone "https://x-access-token:${REPO_TOKEN}@github.com/${REPO_URL#https://github.com/}" "${REPO_DIR}"
+
+    if ! git -C "${REPO_DIR}" checkout "${REPO_REF}"; then
+      echo "Checkout failed for ref: ${REPO_REF}" >&2
+      git -C "${REPO_DIR}" branch -a >&2 || true
+      exit 1
+    fi
+    '
+  - bash -lc 'SETUP_SCRIPT="/opt/openclaw-template/setup.sh"; if [[ ! -f "${SETUP_SCRIPT}" ]]; then echo "Missing setup script in cloned repo. Checked /opt/openclaw-template/setup.sh" >&2; ls -la /opt/openclaw-template >&2 || true; exit 1; fi; OPENCLAW_GATEWAY_TOKEN="openClawGatewayToken" TELEGRAM_BOT_TOKEN="telegramBotToken" TELEGRAM_USER_ID="telegramUserId" OPENROUTER_API_KEY="openRouterApiKey" OPENAI_ACCESS_TOKEN="openAiCodexAccessToken" OPENAI_REFRESH_TOKEN="openAiCodexRefreshToken" OPENAI_EXPIRES="openAiCodexExpires" OPENAI_EMAIL="openAiEmail" OPENCLAW_DEFAULT_MODEL="defaultModel" FB_APP_ID="fbAppId" FB_APP_SECRET="fbAppSecret" FB_SHORT_LIVE_TOKEN="fbShortLiveToken" FB_PAGE_ID="fbPageId" FB_AD_ACCOUNT_ID="fbAdAccountId" OPENCLAW_IMAGE="ghcr.io/hostinger/hvps-openclaw:latest" "${SETUP_SCRIPT}"'
