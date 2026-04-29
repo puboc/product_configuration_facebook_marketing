@@ -3,7 +3,7 @@ package_update: true
 package_upgrade: true
 
 runcmd:
-  - bash -lc 'set -euo pipefail; export DEBIAN_FRONTEND=noninteractive; apt-get update -y; apt-get install -y git python3 python3-pip ca-certificates curl ufw docker.io skopeo'
+  - bash -lc 'set -euo pipefail; export DEBIAN_FRONTEND=noninteractive; apt-get update -y; apt-get install -y git python3 python3-pip ca-certificates curl ufw docker.io skopeo unzip'
   - |
     bash -lc '
     set -euo pipefail

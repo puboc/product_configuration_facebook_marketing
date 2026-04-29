@@ -62,6 +62,8 @@ source "${FEATURE_COMMON_DIR}/lib/api.sh"
 OPENCLAW_BASE_DIR="${OPENCLAW_BASE_DIR:-/opt/openclaw}"
 OPENCLAW_WORKSPACE_DIR="${OPENCLAW_WORKSPACE_DIR:-${OPENCLAW_BASE_DIR}/data/.openclaw/workspace}"
 FB_ENV_PATH="${FB_ENV_PATH:-${OPENCLAW_WORKSPACE_DIR}/fb_env}"
+SKILLS_DIR="${SKILLS_DIR:-${OPENCLAW_WORKSPACE_DIR}/skills}"
+FB_SKILL_ZIP="${FB_SKILL_ZIP:-${SCRIPT_DIR}/skills/facebook-skill-latest.zip}"
 
 fingerprint_value() {
   python3 -c 'import hashlib,sys; print(hashlib.sha256(sys.stdin.buffer.read().rstrip(b"\n")).hexdigest()[:12])' <<< "$1"
@@ -94,12 +96,34 @@ EOF
   log_info "LABEL write_fb_env:done"
 }
 
+install_facebook_skill() {
+  log_info "LABEL install_facebook_skill:start"
+  log_info "Facebook skill install starting zip=${FB_SKILL_ZIP} skills_dir=${SKILLS_DIR}"
+
+  if [[ ! -f "${FB_SKILL_ZIP}" ]]; then
+    log_info "Facebook skill zip not found path=${FB_SKILL_ZIP}" >&2
+    exit 1
+  fi
+
+  install -d "${SKILLS_DIR}"
+  log_info "Facebook skill directory ready dir=${SKILLS_DIR} exists=$([[ -d "${SKILLS_DIR}" ]] && printf true || printf false)"
+
+  unzip -o "${FB_SKILL_ZIP}" -d "${SKILLS_DIR}"
+  log_info "Facebook skill unzipped dir=${SKILLS_DIR}/facebook"
+
+  chmod -R 0755 "${SKILLS_DIR}/facebook/scripts/"
+  log_info "Facebook skill scripts chmod completed"
+
+  log_info "LABEL install_facebook_skill:done"
+}
+
 fc::init_runtime_context
 fc::register_agents_template "${AGENTS_TEMPLATE}"
 
 fc::prepare_host
 fc::write_runtime_env
 fc::run_step "write-fb-env" write_fb_env
+fc::run_step "install-facebook-skill" install_facebook_skill
 fc::install_state_patch
 fc::run_openclaw_container
 fc::find_openclaw_config
