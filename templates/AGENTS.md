@@ -47,7 +47,7 @@ This workspace is prepared for a Facebook Marketing OpenClaw deployment with Tel
 ## Facebook Skill
 - The Facebook skill is installed at `/data/.openclaw/workspace/skills/facebook/`.
 - Read `SKILL.md` inside the skill directory for a complete guide on capabilities and reference materials.
-- Quick orientation:
+- **REQUIRED: Read these script mappings before calling any Facebook API. Using the wrong script or skipping this list causes silent failures.**
   - `scripts/exchange-long-lived-user-token.sh` — convert `TOKEN` into `LONG_LIVED_USER_TOKEN`; use `--write-env` to save it back to `fb_env`.
   - `scripts/check-token.sh` — inspect token validity, scopes, and expiry metadata.
   - `scripts/get-page-token.sh` — resolve the Page access token from a user token.
@@ -163,7 +163,7 @@ This workspace is prepared for a Facebook Marketing OpenClaw deployment with Tel
 ## Facebook Skill
 - The Facebook skill is installed at `/data/.openclaw/workspace/skills/facebook/`.
 - Read `SKILL.md` inside the skill directory for a complete guide on capabilities and reference materials.
-- Quick orientation:
+- **REQUIRED: Read these script mappings before calling any Facebook API. Using the wrong script or skipping this list causes silent failures.**
   - `scripts/exchange-long-lived-user-token.sh` — convert `TOKEN` into `LONG_LIVED_USER_TOKEN`; use `--write-env` to save it back to `fb_env`.
   - `scripts/check-token.sh` — inspect token validity, scopes, and expiry metadata.
   - `scripts/get-page-token.sh` — resolve the Page access token from a user token.
